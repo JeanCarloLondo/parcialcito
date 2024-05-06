@@ -57,12 +57,7 @@ void menu(Arbol &arbol)
             std::cin >> cedula;
             std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Limpiar el buffer de entrada
 
-            std::cout << "Ingrese nombre: ";
-            std::getline(std::cin, nombre); // Para leer toda la linea incluidos espacios
-
-            std::cout << "Ingrese programa academico: ";
-            std::getline(std::cin, programa_academico);
-
+            arbol.eliminar(cedula);
             std::cout << "Persona eliminada.\n";
 
             break;

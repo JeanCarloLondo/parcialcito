@@ -8,12 +8,9 @@ void Arbol::insertar(int cedula, std::string nombre, std::string programa_academ
 }
 
 // Función para eliminar un dato del árbol.
-bool Arbol::eliminar(int cedula, std::string nombre, std::string programa_academico)
+void Arbol::eliminar(int cedula)
 {
-    std::shared_ptr<Dato> item = std::make_shared<Dato>(cedula, nombre, programa_academico);
-    bool encontrado;
-    raiz = eliminarRecursivo(raiz, item);
-    return encontrado;
+    raiz = eliminarRecursivo(raiz, cedula);
 }
 
 void Arbol::elegirRaiz(int cedula, std::string nombre, std::string programa_academico)
@@ -30,7 +27,7 @@ void Arbol::elegirRaiz(int cedula, std::string nombre, std::string programa_acad
     }
 
     // Si se encuentra se elimina
-    raiz = eliminarRecursivo(raiz, nodo->dato);
+    raiz = eliminarRecursivo(raiz, nodo->dato->cedula);
 
     // Se vuelve a insertar y esta vez como raiz
     raiz = insertarRecursivo(raiz, nodo->dato);
@@ -66,20 +63,20 @@ std::shared_ptr<Nodo> Arbol::insertarRecursivo(std::shared_ptr<Nodo> nodo, std::
     return nodo;
 }
 
-std::shared_ptr<Nodo> Arbol::eliminarRecursivo(std::shared_ptr<Nodo> nodo, std::shared_ptr<Dato> dato)
+std::shared_ptr<Nodo> Arbol::eliminarRecursivo(std::shared_ptr<Nodo> nodo, int cedula)
 {
     if (nodo == nullptr)
     {
         std::cerr << "El árbol está vacío" << std::endl;
         return nullptr;
     }
-    else if (dato->cedula < nodo->dato->cedula)
+    else if (cedula < nodo->dato->cedula)
     {
-        nodo->izq = eliminarRecursivo(nodo->izq, dato);
+        nodo->izq = eliminarRecursivo(nodo->izq, cedula);
     }
-    else if (dato->cedula > nodo->dato->cedula)
+    else if (cedula > nodo->dato->cedula)
     {
-        nodo->der = eliminarRecursivo(nodo->der, dato);
+        nodo->der = eliminarRecursivo(nodo->der, cedula);
     }
 
     if (nodo->izq == nullptr)
@@ -91,10 +88,11 @@ std::shared_ptr<Nodo> Arbol::eliminarRecursivo(std::shared_ptr<Nodo> nodo, std::
         return nodo->izq;
     }
 
-    std::shared_ptr<Nodo> temp = minValorNodo(nodo->der);
-    nodo->dato = temp->dato;
-    nodo->der = eliminarRecursivo(nodo->der, temp->dato);
-    
+    // Despues de q lo encuentra y tiene 2 hijos
+    std::shared_ptr<Nodo> temp = minValorNodo(nodo->der);       // valor minimo del subarbol derecho
+    nodo->dato = temp->dato;                                    // iguala el nodo que queremos eliminar con el minimo encontrado
+    nodo->der = eliminarRecursivo(nodo->der, temp->dato->cedula); // en lugar de eliminar el nodo actualizado
+    // eliminamos recursivamente el nodo minimo del subarbol derecho
     return nodo;
 }
 
@@ -112,7 +110,7 @@ std::shared_ptr<Nodo> Arbol::buscarNodo(std::shared_ptr<Nodo> nodo, std::shared_
     {
         return nodo;
     }
-                                      
+
     // Buscar en el subárbol izquierdo y derecho
     std::shared_ptr<Nodo> encontradoIzq = buscarNodo(nodo->izq, objetivo);
     std::shared_ptr<Nodo> encontradoDer = buscarNodo(nodo->der, objetivo);

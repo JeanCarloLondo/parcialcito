@@ -12,13 +12,13 @@ public:
     Arbol() : raiz(nullptr) {}
 
     void insertar(int cedula, std::string nombre, std::string programa_academico);
-    bool eliminar(int cedula, std::string nombre, std::string programa_academico);
+    void eliminar(int cedula);
     void elegirRaiz(int cedula, std::string nombre, std::string programa_academico);
     void imprimirArbol();
 
 private:
     std::shared_ptr<Nodo> insertarRecursivo(std::shared_ptr<Nodo> nodo, std::shared_ptr<Dato> dato);
-    std::shared_ptr<Nodo> eliminarRecursivo(std::shared_ptr<Nodo> nodo, std::shared_ptr<Dato> dato);
+    std::shared_ptr<Nodo> eliminarRecursivo(std::shared_ptr<Nodo> nodo, int cedula);
     std::shared_ptr<Nodo> buscarNodo(std::shared_ptr<Nodo> nodo, std::shared_ptr<Dato> objetivo);
     std::shared_ptr<Nodo> minValorNodo(std::shared_ptr<Nodo> nodo);
     void imprimirArbolRecursivo(std::shared_ptr<Nodo> nodo, const std::string &prefix, bool isLeft);
