@@ -1,0 +1,1 @@
+g++ -o programa main.cpp Arbol.cpp menu.cpp Dato.cpp
