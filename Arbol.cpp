@@ -1,56 +1,92 @@
 #include "Arbol.h"
 
-// Función para insertar un nuevo dato en el árbol.
 void Arbol::insertar(int cedula, std::string nombre, std::string programa_academico)
 {
+    // Verificar si la cédula ya existe en el árbol
+    if (buscarCedula(raiz, cedula))
+    {
+        std::cerr << "La cédula ingresada ya existe. Por favor, ingrese una cédula válida." << std::endl;
+        return;
+    }
+
     std::shared_ptr<Dato> item = std::make_shared<Dato>(cedula, nombre, programa_academico);
     raiz = insertarRecursivo(raiz, item);
 }
 
-// Función para eliminar un dato del árbol.
-void Arbol::eliminar(int cedula)
+bool Arbol::buscarCedula(std::shared_ptr<Nodo> nodo, int cedula)
 {
-    raiz = eliminarRecursivo(raiz, cedula);
+    if (nodo == nullptr)
+    {
+        return false;
+    }
+
+    if (nodo->dato->cedula == cedula)
+    {
+        return true;
+    }
+
+    return buscarCedula(nodo->izq, cedula) || buscarCedula(nodo->der, cedula);
 }
 
-void Arbol::elegirRaiz(int cedula, std::string nombre, std::string programa_academico)
+bool Arbol::eliminar(int cedula)
 {
-    std::shared_ptr<Dato> item = std::make_shared<Dato>(cedula, nombre, programa_academico);
+    if (!raiz)
+    {
+        return false;
+    }
 
-    // Buscar el nodo que elija el usuario
-    std::shared_ptr<Nodo> nodo = buscarNodo(raiz, item);
+        raiz = eliminarRecursivo(raiz, cedula);
+        return true;
+    
+}
+
+std::shared_ptr<Nodo> Arbol::elegirRaiz(int cedula)
+{
+
+    // Guardar una copia del árbol original
+    raizOriginal = raiz;
+
+    // Buscar el nodo que el usuario desea elegir como la nueva raíz
+    std::shared_ptr<Nodo> nodo = buscarNodo(raiz, cedula);
 
     if (nodo == nullptr)
     {
         std::cerr << "No se encontró el nodo especificado." << std::endl;
-        return;
+        return nullptr;
     }
 
-    // Si se encuentra se elimina
-    raiz = eliminarRecursivo(raiz, nodo->dato->cedula);
-
-    // Se vuelve a insertar y esta vez como raiz
-    raiz = insertarRecursivo(raiz, nodo->dato);
-}
-
-// Imprime visualmente el árbol. Si el árbol está vacío, se muestra un mensaje indicativo.
-void Arbol::imprimirArbol()
-{
-    if (!raiz)
+    // Verificar si el nodo ya es la raíz
+    if (nodo == raiz)
     {
-        std::cout << "El árbol está vacío." << std::endl;
+        std::cout << "El nodo seleccionado ya es la raíz." << std::endl;
+        return nodo;
     }
-    else
-    {
-        imprimirArbolRecursivo(raiz, "", true);
-    }
+
+    // Eliminar recursivamente ese nodo del árbol
+    raiz = eliminarRecursivo(raiz, cedula);
+
+    // Reemplazar la raíz actual con el nodo elegido como nueva raíz
+    raiz = nodo;
+
+    // Conectar los subárboles izquierdo y derecho originales al nuevo nodo raíz
+    nodo->izq = raizOriginal;
+    nodo->der = nullptr;
+
+    // Recorrer recursivamente y actualizar referencias
+    actualizarArbol(raizOriginal, nodo);
+
+    // Mostrar información sobre la nueva raíz y los subárboles originales
+    std::cout << "Nueva raíz: " << nodo->dato->nombre << " (Cedula: " << nodo->dato->cedula
+              << " - Programa Academico: " << nodo->dato->programa_academico << ")" << std::endl;
+
+    return nodo;
 }
 
 std::shared_ptr<Nodo> Arbol::insertarRecursivo(std::shared_ptr<Nodo> nodo, std::shared_ptr<Dato> dato)
 {
     if (nodo == nullptr)
     {
-        nodo = std::make_shared<Nodo>(dato); // Construir el nodo con el dato proporcionado
+        return std::make_shared<Nodo>(dato);
     }
     else if (dato->cedula < nodo->dato->cedula)
     {
@@ -67,7 +103,6 @@ std::shared_ptr<Nodo> Arbol::eliminarRecursivo(std::shared_ptr<Nodo> nodo, int c
 {
     if (nodo == nullptr)
     {
-        std::cerr << "El árbol está vacío" << std::endl;
         return nullptr;
     }
     else if (cedula < nodo->dato->cedula)
@@ -78,48 +113,76 @@ std::shared_ptr<Nodo> Arbol::eliminarRecursivo(std::shared_ptr<Nodo> nodo, int c
     {
         nodo->der = eliminarRecursivo(nodo->der, cedula);
     }
-
-    if (nodo->izq == nullptr)
+    else // Se encontró el nodo a eliminar
     {
-        return nodo->der;
-    }
-    else if (nodo->der == nullptr)
-    {
-        return nodo->izq;
+        if (nodo->izq == nullptr)
+        {
+            return nodo->der;
+        }
+        else if (nodo->der == nullptr)
+        {
+            return nodo->izq;
+        }
+
+        // Buscar el nodo mínimo en el subárbol derecho
+        std::shared_ptr<Nodo> temp = minValorNodo(nodo->der);
+
+        // Intercambiar los datos del nodo actual con el nodo mínimo encontrado
+        nodo->dato = temp->dato;
+
+        // Eliminar recursivamente el nodo mínimo del subárbol derecho
+        nodo->der = eliminarRecursivo(nodo->der, temp->dato->cedula);
     }
 
-    // Despues de q lo encuentra y tiene 2 hijos
-    std::shared_ptr<Nodo> temp = minValorNodo(nodo->der);       // valor minimo del subarbol derecho
-    nodo->dato = temp->dato;                                    // iguala el nodo que queremos eliminar con el minimo encontrado
-    nodo->der = eliminarRecursivo(nodo->der, temp->dato->cedula); // en lugar de eliminar el nodo actualizado
-    // eliminamos recursivamente el nodo minimo del subarbol derecho
     return nodo;
 }
 
-std::shared_ptr<Nodo> Arbol::buscarNodo(std::shared_ptr<Nodo> nodo, std::shared_ptr<Dato> objetivo)
+void Arbol::actualizarArbol(std::shared_ptr<Nodo> &original, std::shared_ptr<Nodo> &nuevaRaiz)
 {
-    if (nodo == nullptr)
+    if (original == nullptr)
     {
-        std::cerr << "La lista se encuentra vacía" << std::endl;
-        return nullptr;
+        return;
     }
 
-    if (nodo->dato->cedula == objetivo->cedula &&
-        nodo->dato->nombre == objetivo->nombre &&
-        nodo->dato->programa_academico == objetivo->programa_academico)
+    // Insertar el nodo original en el árbol con la nueva raíz, si no existe ya
+    if (original != nuevaRaiz && !buscarNodo(nuevaRaiz, original->dato->cedula))
+    {
+        nuevaRaiz = insertarRecursivo(nuevaRaiz, original->dato);
+    }
+
+    // Recorrer el árbol original y actualizar los punteros de los nodos
+    if (original->izq != nullptr)
+    {
+        // Llamar recursivamente a la función para el subárbol izquierdo, pasando la nueva raíz como padre
+        actualizarArbol(original->izq, nuevaRaiz);
+    }
+
+    if (original->der != nullptr)
+    {
+        // Llamar recursivamente a la función para el subárbol derecho, pasando la nueva raíz como padre
+        actualizarArbol(original->der, nuevaRaiz);
+    }
+}
+
+std::shared_ptr<Nodo> Arbol::buscarNodo(std::shared_ptr<Nodo> nodo, int cedula)
+{
+
+    if (nodo->dato->cedula == cedula)
     {
         return nodo;
     }
 
-    // Buscar en el subárbol izquierdo y derecho
-    std::shared_ptr<Nodo> encontradoIzq = buscarNodo(nodo->izq, objetivo);
-    std::shared_ptr<Nodo> encontradoDer = buscarNodo(nodo->der, objetivo);
+    std::shared_ptr<Nodo> encontradoIzq = buscarNodo(nodo->izq, cedula);
+    std::shared_ptr<Nodo> encontradoDer = buscarNodo(nodo->der, cedula);
 
-    // Devuelve el nodo encontrado (si está) o nullptr
     if (encontradoIzq != nullptr)
+    {
         return encontradoIzq;
+    }
     else
+    {
         return encontradoDer;
+    }
 }
 
 std::shared_ptr<Nodo> Arbol::minValorNodo(std::shared_ptr<Nodo> nodo)
@@ -130,6 +193,18 @@ std::shared_ptr<Nodo> Arbol::minValorNodo(std::shared_ptr<Nodo> nodo)
         current = current->izq;
     }
     return current;
+}
+
+void Arbol::imprimirArbol()
+{
+    if (!raiz)
+    {
+        std::cout << "El árbol está vacío." << std::endl;
+    }
+    else
+    {
+        imprimirArbolRecursivo(raiz, "", true);
+    }
 }
 
 void Arbol::imprimirArbolRecursivo(std::shared_ptr<Nodo> nodo, const std::string &prefix, bool isLeft)

@@ -5,7 +5,8 @@
 #include <string>
 
 // Definición de la clase Dato, que representa a una persona con cedula, nombre y prog_acad.
-class Dato {
+class Dato
+{
 public:
     int cedula;
     std::string nombre;
