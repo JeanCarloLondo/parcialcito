@@ -1,22 +1,37 @@
 #include <iostream>
 #include <string>
-#include <memory>
+#include <limits> // Para utilizar std::numeric_limits
 #include "Arbol.h"
-#include <limits>
 
+// Función para obtener una opción válida del menú
 int obtenerOpcionValida()
 {
     int opcion;
     std::cout << "Seleccione una opción: ";
     std::cin >> opcion;
-    // Validar que la opción esté en el rango de 1 a 5
+
+    // Verificar si la entrada es válida
+    if (std::cin.fail())
+    {
+        std::cin.clear();  // Limpiar el estado de error del flujo de entrada
+        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Descartar la entrada no válida
+        std::cerr << "Error: Entrada no válida. Por favor, ingrese un número válido." << std::endl;
+        return 0; // Devolver 0 para indicar una entrada inválida
+    }
+
+    // Verificar que la opción esté en el rango de 1 a 5
     if (opcion >= 1 && opcion <= 5)
     {
-        return opcion; // Convertir el código ASCII a número
+        return opcion; // Devolver la opción válida
     }
-    return 0; // Si no está en el rango, devuelve 0
+    else
+    {
+        std::cerr << "Error: Opción fuera de rango. Por favor, seleccione una opción válida." << std::endl;
+        return 0; // Devolver 0 para indicar una opción inválida
+    }
 }
 
+// Función que muestra el menú y permite interactuar con el árbol
 void menu(Arbol &arbol)
 {
     int opcion;
@@ -32,7 +47,8 @@ void menu(Arbol &arbol)
         std::cout << "3. Mostrar Árbol\n";
         std::cout << "4. Elegir Nueva Raíz\n";
         std::cout << "5. Salir\n";
-        opcion = obtenerOpcionValida(); // No es necesario declarar la variable 'opcion' aquí
+
+        opcion = obtenerOpcionValida(); // Obtener una opción válida del usuario
 
         switch (opcion)
         {
@@ -41,7 +57,7 @@ void menu(Arbol &arbol)
             std::cin >> cedula;
             std::cout << "Ingrese nombre: ";
             std::cin.ignore();              // Limpiar el buffer de entrada antes de leer la línea
-            std::getline(std::cin, nombre); // Para leer toda la línea incluidos espacios
+            std::getline(std::cin, nombre); // Leer el nombre completo incluyendo espacios
             std::cout << "Ingrese programa academico: ";
             std::getline(std::cin, programa_academico);
             arbol.insertar(cedula, nombre, programa_academico);
@@ -50,19 +66,18 @@ void menu(Arbol &arbol)
         case 2:
             if (!arbol.raiz)
             {
-                std::cerr << "El árbol está vacío. No se puede eliminar una raiz." << std::endl;
+                std::cerr << "El árbol está vacío. No se puede eliminar una persona.\n";
                 break;
             }
             std::cout << "Ingrese cedula: ";
             std::cin >> cedula;
-            std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // Limpiar el buffer de entrada
-            if (arbol.eliminar(cedula)==true)
+            if (arbol.eliminar(cedula))
             {
-                std::cout << "Eliminando...\n";
+                std::cout << "Persona eliminada correctamente.\n";
             }
             else
             {
-                std::cout << "No se encontró la persona.\n";
+                std::cout << "No se encontró la persona en el árbol.\n";
             }
             break;
 
@@ -71,27 +86,27 @@ void menu(Arbol &arbol)
             break;
 
         case 4:
-
             if (!arbol.raiz)
             {
-                std::cerr << "El árbol está vacío. No se puede elegir una nueva raíz." << std::endl;
+                std::cerr << "El árbol está vacío. No se puede elegir una nueva raíz.\n";
                 break;
             }
             std::cout << "Ingrese cedula de la nueva raiz: ";
             std::cin >> cedula;
-            std::cin.ignore(); // Limpiar el buffer de entrada antes de leer la línea
             std::cout << "Ingrese nombre de la nueva raiz: ";
-            std::getline(std::cin, nombre); // Para leer toda la línea incluidos espacios
+            std::cin.ignore(); // Limpiar el buffer de entrada antes de leer la línea
+            std::getline(std::cin, nombre);
             std::cout << "Ingrese programa academico de la nueva raiz: ";
             std::getline(std::cin, programa_academico);
             arbol.elegirRaiz(cedula);
             break;
 
         case 5:
+            std::cout << "Saliendo del programa.\n";
             return;
 
         default:
-            std::cout << "Opción inválida. Intente de nuevo.\n";
+            break;
         }
     }
 }
